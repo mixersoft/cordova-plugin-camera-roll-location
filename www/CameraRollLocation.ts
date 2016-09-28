@@ -30,7 +30,7 @@ interface NodeCallback {
 
 /**
 * get photos from CameraRoll together with location and moment data
-* calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec() 
+* calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec()
 * swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [PhotoWithLoc]
 *
 * @param  {optionsGetByMoments}    options {from:, to:, mediaType:, mediaSubtypes: }
@@ -50,7 +50,7 @@ export function getByMoments(
   ['from', 'to', 'mediaType', 'mediaSubtype'].forEach((k: string) => {
     if (options.hasOwnProperty(k) && options[k]) arg0[k] = options[k];
   })
-  const successCallback = (result: any) => {
+  const successCallback = (result: string = "[]") => {
     try {
       let data = JSON.parse(result);
       callback(null, data);

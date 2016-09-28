@@ -36,13 +36,13 @@ class Date {
     // get result from CameraRoll
     let cameraRoll = PhotoWithLocationService()
     var data : [NSData] = []
-    
+
     // runInBackground
     self.commandDelegate!.runInBackground({
-        
+
         let result = cameraRoll.getByMoments(from:fromDate, to:toDate);
-        if (result.count > 0) {
-            
+        if result.count > 0 {
+
             // toJSON()
             var asJson = ""
             for o in result {
@@ -53,13 +53,18 @@ class Date {
                 data.append( NSKeyedArchiver.archivedDataWithRootObject(o) )
             }
             asJson = "[\(asJson)]"
-            
+
             pluginResult = CDVPluginResult(
                 status: CDVCommandStatus_OK,
                 messageAsString: asJson
             )
-        }
-        
+          } else if result.count == 0 {
+              pluginResult = CDVPluginResult(
+                  status: CDVCommandStatus_OK,
+                  messageAsString: "[]"
+              )
+          }}
+
 //    let aDict = [result[0].uuid:result[0]]
 //    pluginResult = CDVPluginResult(
 //        status: CDVCommandStatus_OK
@@ -68,13 +73,13 @@ class Date {
 ////      ,  messageAsDictionary: aDict      // Invalid type in JSON write (mappi1.CameraRollPhoto)
 ////      ,  messageAsMultipart: data        // returns ArrayBuffer to JS - then what?
 //    )
-        
+
         // send result in Background
         self.commandDelegate!.sendPluginResult(
             pluginResult,
             callbackId: command.callbackId
         )
     })
-    
+
   }
 }

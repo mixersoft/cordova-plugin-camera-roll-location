@@ -23,7 +23,7 @@
 
     /**
     * get photos CameraRoll along with location and moment data
-    * calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec 
+    * calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec
     * swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [PhotoWithLoc]
     *
     * @param  {optionsGetByMoments}    options {from:, to: mediaType: mediaSubtypes: }
@@ -41,6 +41,7 @@
                 arg0[k] = options[k];
         });
         var successCallback = function (result) {
+            if (result === void 0) { result = "[]"; }
             try {
                 var data = JSON.parse(result);
                 callback(null, data);
