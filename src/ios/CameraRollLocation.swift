@@ -63,9 +63,9 @@ class Date {
 //    let aDict = [result[0].uuid:result[0]]
 //    pluginResult = CDVPluginResult(
 //        status: CDVCommandStatus_OK
-////      ,  messageAsArray: result          // <NSInvalidArgumentException> Invalid type in JSON write (mappi1.PhotoWithLoc)
+////      ,  messageAsArray: result          // <NSInvalidArgumentException> Invalid type in JSON write (mappi1.CameraRollPhoto)
 ////      ,  messageAsArray: data            // <NSInvalidArgumentException> Invalid type in JSON write (NSConcreteMutableData)
-////      ,  messageAsDictionary: aDict      // Invalid type in JSON write (mappi1.PhotoWithLoc)
+////      ,  messageAsDictionary: aDict      // Invalid type in JSON write (mappi1.CameraRollPhoto)
 ////      ,  messageAsMultipart: data        // returns ArrayBuffer to JS - then what?
 //    )
         

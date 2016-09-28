@@ -8,9 +8,9 @@
 import Photos
 import CoreLocation
 
-let DEBUG = true
+let DEBUG = false
 
-class PhotoWithLoc: NSObject, NSCoding {
+class CameraRollPhoto: NSObject, NSCoding {
 
     let uuid: String
     var filename: String
@@ -31,7 +31,7 @@ class PhotoWithLoc: NSObject, NSCoding {
     let dateFormatter = NSDateFormatter()
     let enUSPosixLocale = NSLocale(localeIdentifier: "en_US_POSIX")
 
-
+    // for NSCoding
     // see: https://developer.apple.com/library/content/referencelibrary/GettingStarted/DevelopiOSAppsSwift/Lesson10.html
     func encodeWithCoder(aCoder: NSCoder) {
         aCoder.encodeObject(self.uuid, forKey: "uuid")
@@ -42,9 +42,19 @@ class PhotoWithLoc: NSObject, NSCoding {
         aCoder.encodeBool(self.isFavorite, forKey: "isFavorite")
         aCoder.encodeObject(self.burstId, forKey: "burstId")
         aCoder.encodeBool(self.representsBurst, forKey: "representsBurst")
-        aCoder.encodeDouble(self.longitude!, forKey: "lon")
-        aCoder.encodeDouble(self.latitude!, forKey: "lat")
-        aCoder.encodeDouble(self.speed!, forKey: "speed")
+        
+        var geoJsonPoint : [String:AnyObject]
+        if let lon = self.longitude, let lat = self.latitude {
+             geoJsonPoint = [
+                "type": "Point",
+                "coordinates": [lon, lat]
+            ]
+            if let speed = self.speed {
+                geoJsonPoint["speed"] = speed
+            }
+            aCoder.encodeObject(geoJsonPoint, forKey: "location")
+        }
+
         aCoder.encodeObject(self.momentId, forKey: "momentId")
         aCoder.encodeObject(self.momentLocationName, forKey: "momentLocationName")
     }
@@ -66,6 +76,15 @@ class PhotoWithLoc: NSObject, NSCoding {
         self.filename = filename
         self.dateTaken = dateTaken
         self.mediaType = mediaType
+        
+        
+        if let geoJson = aDecoder.decodeObjectForKey("location") as! [String:AnyObject]?,
+            let coord = geoJson["coordinates"] as! Array<Double>?
+        {
+            self.longitude = coord[0]
+            self.latitude = coord[1]
+            self.speed = geoJson["speed"] as! Double?
+        }
 
         self.isFavorite = aDecoder.decodeBoolForKey("isFavorite")
         self.representsBurst = aDecoder.decodeBoolForKey("representsBurst")
@@ -75,9 +94,6 @@ class PhotoWithLoc: NSObject, NSCoding {
 
         // optional
         self.burstId = aDecoder.decodeObjectForKey("burstId") as! String?
-        self.longitude = aDecoder.decodeDoubleForKey("lon")
-        self.latitude = aDecoder.decodeDoubleForKey("lat")
-        self.speed = aDecoder.decodeDoubleForKey("speed")
         self.momentId = aDecoder.decodeObjectForKey("momentId") as! String?
         self.momentLocationName = aDecoder.decodeObjectForKey("momentLocationName") as! String?
 
@@ -172,8 +188,8 @@ class PhotoWithLoc: NSObject, NSCoding {
 
 class PhotoWithLocationService {
 
-    func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [PhotoWithLoc] {
-        var result : Array<PhotoWithLoc> = []
+    func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [CameraRollPhoto] {
+        var result : Array<CameraRollPhoto> = []
 
         let options = PHFetchOptions()
         options.sortDescriptors = [ NSSortDescriptor(key: "creationDate", ascending: false) ]
@@ -224,7 +240,7 @@ class PhotoWithLocationService {
     }
 
 
-    func mapLocations(assets: PHFetchResult, from: NSDate? = nil, to: NSDate? = nil, moment: PHAssetCollection? = nil) -> [PhotoWithLoc]
+    func mapLocations(assets: PHFetchResult, from: NSDate? = nil, to: NSDate? = nil, moment: PHAssetCollection? = nil) -> [CameraRollPhoto]
     {
 
         // TODO: add moment? as a Dictionary with keys: startDate, endDate, count
@@ -232,7 +248,7 @@ class PhotoWithLocationService {
         let locationUuid = moment?.localIdentifier
 
 
-        var result : Array<PhotoWithLoc> = []
+        var result : Array<CameraRollPhoto> = []
         for i in 0 ..< assets.count
         {
 
@@ -288,7 +304,7 @@ class PhotoWithLocationService {
                 speed = location.speed
             }
 
-            let photo = PhotoWithLoc(
+            let photo = CameraRollPhoto(
                 uuid: uuid, filename: filename, dateTaken: dateTaken,
                 mediaType: asset.mediaType, mediaSubtypes : asset.mediaSubtypes,
                 isFavorite: asset.favorite, burstId: asset.burstIdentifier, representsBurst: asset.representsBurst,

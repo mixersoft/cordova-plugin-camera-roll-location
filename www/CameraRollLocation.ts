@@ -29,13 +29,13 @@ interface NodeCallback {
 }
 
 /**
-* get photos CameraRoll along with location and moment data
-* calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec 
+* get photos from CameraRoll together with location and moment data
+* calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec() 
 * swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [PhotoWithLoc]
 *
-* @param  {optionsGetByMoments}    options {from:, to: mediaType: mediaSubtypes: }
-* @param  {NodeCallback}           nodejs style callback, i.e. (err, resp)=>{}
-* @return [PhotoWithLoc]           array of PhotoWithLoc
+* @param  {optionsGetByMoments}    options {from:, to:, mediaType:, mediaSubtypes: }
+* @param  function NodeCallback    nodejs style callback, i.e. (err, resp)=>{}
+* @return [PhotoWithLoc,]          array of PhotoWithLoc
 */
 export function getByMoments(
   options: optionsGetByMoments = {},
