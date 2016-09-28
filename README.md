@@ -22,8 +22,8 @@ Xcode version: Xcode 7.3 Build version 7D175
 
 ```
 ionic plugin add cordova-plugin-add-swift-support --save
-# ionic plugin remove com-snaphappi-plugins-camera-roll-location;
-ionic plugin add /dev.snaphappi.com/_xcode/CameraRollLocation
+ionic plugin remove com-snaphappi-plugin-camera-roll-location;
+ionic plugin add https://github.com/mixersoft/cordova-plugin-camera-roll-location.git
 ```
 
 ## Usage

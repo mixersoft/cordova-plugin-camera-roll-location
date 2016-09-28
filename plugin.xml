@@ -3,6 +3,7 @@
     <name>CameraRollLocation</name>
     <js-module name="CameraRollLocation" src="www/CameraRollLocation.js">
         <clobbers target="cordova.plugins.CameraRollLocation" />
+        <clobbers target="snappi_CameraRollLocation" />
     </js-module>
 
      <!-- ios -->

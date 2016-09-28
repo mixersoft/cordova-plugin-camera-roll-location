@@ -1,5 +1,5 @@
+// cordova.define("com-snaphappi-plugins-camera-roll-location.CameraRollLocation", function (require, exports, module) {
 
-cordova.define("com-snaphappi-plugins-camera-roll-location.CameraRollLocation", function (require, exports, module) {
     var exec = require('cordova/exec');
     (function (mediaType) {
         mediaType[mediaType["Unknown"] = 0] = "Unknown";
@@ -54,4 +54,4 @@ cordova.define("com-snaphappi-plugins-camera-roll-location.CameraRollLocation", 
     }
     exports.getByMoments = getByMoments;
 
-});
+// });
