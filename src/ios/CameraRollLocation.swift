@@ -63,7 +63,7 @@ class Date {
                   status: CDVCommandStatus_OK,
                   messageAsString: "[]"
               )
-          }}
+          }
 
 //    let aDict = [result[0].uuid:result[0]]
 //    pluginResult = CDVPluginResult(
