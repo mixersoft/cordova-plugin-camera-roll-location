@@ -11,6 +11,8 @@ class Date {
 }
 
 @objc(CameraRollLocation) class CameraRollLocation : CDVPlugin {
+
+
   func getByMoments(command: CDVInvokedUrlCommand) {
     var pluginResult = CDVPluginResult(
       status: CDVCommandStatus_ERROR
@@ -30,32 +32,49 @@ class Date {
         toDate = Date.parse( (options["to"] as! NSString).substringToIndex(10) )
         print("TO: \( (options["to"] as! NSString).substringToIndex(10) ) => \(toDate)")
     }
-    
+
     // get result from CameraRoll
     let cameraRoll = PhotoWithLocationService()
-    let result = cameraRoll.getByMoments(from:fromDate, to:toDate);
-    if (result.count > 0) {
-
-      var asJson = ""
-      for o in result {
-          if !asJson.isEmpty {
-              asJson += ", "
-          }
-          asJson += "\(o.toJson())"
-      }
-      asJson = "[\(asJson)]"
+    var data : [NSData] = []
+    
+    // runInBackground
+    self.commandDelegate!.runInBackground({
         
-      pluginResult = CDVPluginResult(
-        status: CDVCommandStatus_OK,
-        messageAsString: asJson
-//        messageAsArray: result   // ???: how do you return as an JS Object??
-      )  
-
-    }
-
-    self.commandDelegate!.sendPluginResult(
-      pluginResult, 
-      callbackId: command.callbackId
-    )
+        let result = cameraRoll.getByMoments(from:fromDate, to:toDate);
+        if (result.count > 0) {
+            
+            // toJSON()
+            var asJson = ""
+            for o in result {
+                if !asJson.isEmpty {
+                    asJson += ", "
+                }
+                asJson += "\(o.toJson())"
+                data.append( NSKeyedArchiver.archivedDataWithRootObject(o) )
+            }
+            asJson = "[\(asJson)]"
+            
+            pluginResult = CDVPluginResult(
+                status: CDVCommandStatus_OK,
+                messageAsString: asJson
+            )
+        }
+        
+//    let aDict = [result[0].uuid:result[0]]
+//    pluginResult = CDVPluginResult(
+//        status: CDVCommandStatus_OK
+////      ,  messageAsArray: result          // <NSInvalidArgumentException> Invalid type in JSON write (mappi1.PhotoWithLoc)
+////      ,  messageAsArray: data            // <NSInvalidArgumentException> Invalid type in JSON write (NSConcreteMutableData)
+////      ,  messageAsDictionary: aDict      // Invalid type in JSON write (mappi1.PhotoWithLoc)
+////      ,  messageAsMultipart: data        // returns ArrayBuffer to JS - then what?
+//    )
+        
+        // send result in Background
+        self.commandDelegate!.sendPluginResult(
+            pluginResult,
+            callbackId: command.callbackId
+        )
+    })
+    
   }
 }
