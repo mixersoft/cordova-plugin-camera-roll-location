@@ -33,7 +33,7 @@ ionic plugin add /dev.snaphappi.com/_xcode/CameraRollLocation
 platform.ready().then(() => {
   // Okay, so the platform is ready and our plugins are available.
 
-  const plugin = window['CameraRollLocation'];
+  const plugin = cordova.plugins.CameraRollLocation;
   const results = plugin.getByMoments(
     {
       from: new Date('2016-09-01'),

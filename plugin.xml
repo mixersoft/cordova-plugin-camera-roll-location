@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="com-snaphappi-plugins-camera-roll-location" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="com-snaphappi-plugin-camera-roll-location" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>CameraRollLocation</name>
     <js-module name="CameraRollLocation" src="www/CameraRollLocation.js">
-        <clobbers target="CameraRollLocation" />
+        <clobbers target="cordova.plugins.CameraRollLocation" />
     </js-module>
 
      <!-- ios -->
