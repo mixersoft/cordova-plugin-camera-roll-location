@@ -24,13 +24,13 @@ class Date {
     // prepare params
     var fromDate : NSDate? = nil;
     var toDate : NSDate? = nil;
-    if (options["from"] != nil) {
-        fromDate = Date.parse( (options["from"] as! NSString).substringToIndex(10) )
-        print("FROM: \( (options["from"] as! NSString).substringToIndex(10) ) => \(fromDate)")
+    if let from = options["from"] as! NSString? {
+        fromDate = Date.parse( from.substringToIndex(10) )
+        print("FROM: \( from.substringToIndex(10) ) => \(fromDate)")
     }
-    if (options["to"] != nil) {
-        toDate = Date.parse( (options["to"] as! NSString).substringToIndex(10) )
-        print("TO: \( (options["to"] as! NSString).substringToIndex(10) ) => \(toDate)")
+    if let to = options["to"] as! NSString? {
+        toDate = Date.parse( to.substringToIndex(10) )
+        print("TO: \( to.substringToIndex(10) ) => \(toDate)")
     }
 
     // get result from CameraRoll
