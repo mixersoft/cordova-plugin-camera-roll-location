@@ -97,6 +97,13 @@ declare module "camera-roll.types" {
         mediaType?: mediaType;
         mediaSubtype?: mediaSubtype;
     }
+    export interface optionsQuery {
+        from?: Date;
+        to?: Date;
+        mediaType?: mediaType;
+        mediaSubtype?: mediaSubtype;
+        [propName: string]: any;
+    }
     export interface optionsFilter {
         startDate?: Date;
         endDate?: Date;
@@ -239,11 +246,12 @@ declare module "camera-roll.types" {
     }
 }
 declare module "camera-roll.service" {
-    import { optionsFilter, optionsSort, cameraRollPhoto } from "camera-roll.types";
+    import { optionsQuery, optionsFilter, optionsSort, cameraRollPhoto } from "camera-roll.types";
     export class CameraRollWithLoc {
         protected _photos: cameraRollPhoto[];
         protected _filter: optionsFilter;
         protected _filteredPhotos: cameraRollPhoto[];
+        private _isProcessing;
         static sortPhotos(photos: cameraRollPhoto[], options?: optionsSort[], replace?: boolean): cameraRollPhoto[];
         static groupPhotos(photos: cameraRollPhoto[], options?: any): any;
         constructor();
@@ -251,11 +259,11 @@ declare module "camera-roll.service" {
          * get cameraRollPhoto[] from CameraRoll using Plugin,
          * uses cached values by default, ignore with force==true
          * filter later in JS
-         * @param  {any}                  interface optionsFilter
+         * @param  {optionsQuery}                  interface optionsQuery
          * @param  {boolean = false}      refresh
          * @return {Promise<cameraRollPhoto[]>}         [description]
          */
-        queryPhotos(options?: any, force?: boolean): Promise<cameraRollPhoto[]>;
+        queryPhotos(options?: optionsQuery, force?: boolean): Promise<cameraRollPhoto[]>;
         /**
          * filter photos in cameraRoll
          * @param  {optionsFilter}          {startDate:, endDate, locationName, mediaType}

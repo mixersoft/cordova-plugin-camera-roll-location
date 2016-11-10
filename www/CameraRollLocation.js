@@ -247,6 +247,22 @@ var location_helper_1 = exports;
                
     exec = require('cordova/exec');
     var PLUGIN_KEY = "cordova.plugins.CameraRollLocation";
+    function _localTimeAsDate(localTime) {
+        try {
+            var dt = new Date(localTime);
+            if (isNaN(dt) == false)
+                return dt;
+            // BUG: Safari does not parse time strings to Date correctly  
+            var _a = localTime.match(/(.*)\s(\d*):(\d*):(\d*)\./), d = _a[1], h = _a[2], m = _a[3], s = _a[4];
+            dt = new Date(d);
+            dt.setHours(parseInt(h), parseInt(m), parseInt(s));
+            // console.log(`localTimeAsDate=${dt.toISOString()}`)
+            return dt;
+        }
+        catch (err) {
+            throw new Error("Invalid localTime string, value=" + localTime);
+        }
+    }
     var CameraRollWithLoc = (function () {
         function CameraRollWithLoc() {
             this._photos = [];
@@ -357,17 +373,20 @@ var location_helper_1 = exports;
          * get cameraRollPhoto[] from CameraRoll using Plugin,
          * uses cached values by default, ignore with force==true
          * filter later in JS
-         * @param  {any}                  interface optionsFilter
+         * @param  {optionsQuery}                  interface optionsQuery
          * @param  {boolean = false}      refresh
          * @return {Promise<cameraRollPhoto[]>}         [description]
          */
         CameraRollWithLoc.prototype.queryPhotos = function (options, force) {
             var _this = this;
-            if (options === void 0) { options = {}; }
             if (force === void 0) { force = false; }
-            if (this._photos.length && !options && force == false) {
-                console.info("CameraRoll.queryPhotos() using cached values");
+            if (!this._isProcessing && this._photos.length && !options && force == false) {
+                // resolve immediately with cached value
                 return Promise.resolve(this._photos);
+            }
+            if (this._isProcessing && !options && force == false) {
+                // wait for promise to resolve
+                return this._isProcessing;
             }
             var context;
             var plugin;
@@ -378,18 +397,21 @@ var location_helper_1 = exports;
                 if (plugin)
                     context = 'plugin';
             }
-            var pr;
             switch (context) {
                 case 'cordova':
-                    // pr = plugin['getByMoments'](options)
                     // const args0 = _pick(options, ["from", "to", "mediaType", "mediaSubType"]);
                     var args0_1 = {};
                     ["from", "to", "mediaType", "mediaSubType"].forEach(function (k) {
                         if (options.hasOwnProperty(k) && options[k] != undefined)
                             args0_1[k] = options[k];
                     });
+                    // map startDate=>from, endDate=>to as a convenience
+                    if (options && !options.from && options['startDate'])
+                        options.from = options['startDate'];
+                    if (options && !options.to && options['endDate'])
+                        options.to = options['endDate'];
                     var methodName_1 = "getByMoments";
-                    pr = new Promise(function (resolve, reject) {
+                    this._isProcessing = new Promise(function (resolve, reject) {
                         // cordova.exec()
                         exec(resolve, reject, "cameraRollLocation", methodName_1, [args0_1]);
                     })
@@ -406,11 +428,11 @@ var location_helper_1 = exports;
                     });
                     break;
                 case 'plugin':
-                    pr = plugin.getMoments(options);
+                    this._isProcessing = plugin.getMoments(options);
                     break;
                 default:
                     if (!cameraRollAsJsonString) {
-                        pr = Promise.reject("ERROR: cordova plugin error, cordova not available??!?");
+                        this._isProcessing = Promise.reject("ERROR: cordova plugin error, cordova not available??!?");
                     }
                     else {
                         if (!this._photos.length) {
@@ -423,16 +445,17 @@ var location_helper_1 = exports;
                                 console.error("Error parsing JSON");
                             }
                         }
-                        pr = Promise.resolve(this._photos);
+                        this._isProcessing = Promise.resolve(this._photos);
                     }
                     break;
             }
-            return pr.then(function (photos) {
+            return this._isProcessing.then(function (photos) {
                 photos.forEach(function (o) {
                     if (o.location && o.location instanceof location_helper_1.GeoJsonPoint == false) {
                         o.location = new location_helper_1.GeoJsonPoint(o.location);
                     }
                 });
+                _this._isProcessing = null;
                 return _this._photos = photos;
             });
         };
@@ -460,9 +483,9 @@ var location_helper_1 = exports;
             // let fromAsLocalTime = new Date(from.valueOf() - from.getTimezoneOffset()*60000).toJSON()
             result = result.filter(function (o) {
                 // filter on localTime
-                if (from && new Date(o['localTime']) < from)
+                if (from && _localTimeAsDate(o['localTime']) < from)
                     return false;
-                if (to && new Date(o['localTime']) > to)
+                if (to && _localTimeAsDate(o['localTime']) > to)
                     return false;
                 if (locationName
                     && false === o['momentLocationName'].startsWith(locationName))
@@ -489,7 +512,7 @@ var location_helper_1 = exports;
                 // everything good
                 return true;
             });
-            this._filteredPhotos = result;
+            this._filteredPhotos = result || [];
             return Promise.resolve(this._filteredPhotos);
         };
         /**
