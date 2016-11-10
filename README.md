@@ -135,3 +135,11 @@ ionic plugin remove com-snaphappi-plugin-camera-roll-location;
 ionic plugin add https://github.com/mixersoft/cordova-plugin-camera-roll-location.git --save
 ionic emulate
 ```
+
+## License
+
+This software is released under the [Apache 2.0 License][apache2_license].
+
+© 2016 Snaphappi, Inc. All rights reserved
+
+[apache2_license]: http://opensource.org/licenses/Apache-2.0
