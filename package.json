@@ -1,0 +1,36 @@
+{
+	"name": "cordova-plugin-camera-roll-location",
+	"version": "0.2.0",
+	"description": "get location metadata with photos from CameraRoll",
+	"cordova": {
+		"id": "com-snaphappi-plugin-camera-roll-location",
+		"platforms": [
+			"ios"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mixersoft/cordova-plugin-camera-roll-location.git"
+	},
+	"keywords": [
+		"ecosystem:cordova",
+		"cordova-ios",
+		"camera",
+		"location",
+		"gps"
+	],
+	"engines": {
+		"cordovaDependencies": {
+			"0.1.0": {
+				"cordova": "6.3.1",
+				"cordova-plugin-add-swift-support": "1.3.2"
+			}
+		}
+	},
+	"author": "Michael Lin",
+	"license": "Apache License 2.0",
+	"bugs": {
+		"url": "https://github.com/mixersoft/cordova-plugin-camera-roll-location/issues"
+	},
+	"homepage": "https://github.com/mixersoft/cordova-plugin-camera-roll-location#readme"
+}
