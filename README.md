@@ -11,7 +11,7 @@ plugin `id="com-snaphappi-plugin-camera-roll-location"`
 
 ```
 ionic plugin add cordova-plugin-add-swift-support --save
-ionic plugin add com-snaphappi-plugin-camera-roll-location --save
+ionic plugin add cordova-plugin-camera-roll-location --save
 ionic build ios
 ```
 
@@ -132,7 +132,7 @@ platform.ready().then(() => {
 # ionic plugin remove cordova-plugin-add-swift-support
 # ionic plugin add cordova-plugin-add-swift-support --save
 ionic plugin remove com-snaphappi-plugin-camera-roll-location;
-ionic plugin add com-snaphappi-plugin-camera-roll-location --save
+ionic plugin add cordova-plugin-camera-roll-location;
 ionic emulate
 ```
 
