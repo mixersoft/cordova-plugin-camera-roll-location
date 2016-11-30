@@ -1,7 +1,7 @@
 # Cordova `CameraRollLocation` plugin
 This cordova plugin provides an API for accessing camera-roll photos with location and 'moment' information.
 
-plugin `id="com-snaphappi-plugin-camera-roll-location"`
+plugin id=`"com-snaphappi-plugin-camera-roll-location"`
 
 ## Supported Platforms
 
@@ -31,6 +31,8 @@ Xcode version: Xcode 7.3 Build version 7D175
 ```
 
 ## Usage
+
+* see the demo: https://github.com/mixersoft/ionic2-camera-roll-location-demo
 
 ```javascript
 // typescript
