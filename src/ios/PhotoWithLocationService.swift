@@ -33,26 +33,31 @@ import CoreLocation
 let DEBUG = false
 
 class CameraRollPhoto: NSObject, NSCoding {
-
+    
     let uuid: String
     var filename: String
     let dateTaken: NSDate
     let mediaType: PHAssetMediaType
     let mediaSubtypes: PHAssetMediaSubtype
+    
+    var width: Int
+    var height: Int
+    var duration: Double
+    
     var isFavorite: Bool
     let burstId: String?
     var representsBurst: Bool
-
+    
     var longitude: Double?
     var latitude: Double?
     var speed: Double?
-
+    
     var momentId: String?
     var momentLocationName: String?
-
+    
     let dateFormatter = NSDateFormatter()
     let enUSPosixLocale = NSLocale(localeIdentifier: "en_US_POSIX")
-
+    
     // for NSCoding
     // see: https://developer.apple.com/library/content/referencelibrary/GettingStarted/DevelopiOSAppsSwift/Lesson10.html
     func encodeWithCoder(aCoder: NSCoder) {
@@ -61,26 +66,38 @@ class CameraRollPhoto: NSObject, NSCoding {
         aCoder.encodeObject(self.dateTaken, forKey: "dateTaken")
         aCoder.encodeInteger(self.mediaType.rawValue, forKey: "mediaType")
         aCoder.encodeObject(self.mediaSubtypes.rawValue, forKey: "mediaSubtypes")
+        aCoder.encodeInteger(self.width, forKey: "width")
+        aCoder.encodeInteger(self.height, forKey: "height")
+        aCoder.encodeDouble(self.duration, forKey: "duration")
         aCoder.encodeBool(self.isFavorite, forKey: "isFavorite")
         aCoder.encodeObject(self.burstId, forKey: "burstId")
         aCoder.encodeBool(self.representsBurst, forKey: "representsBurst")
         
         var geoJsonPoint : [String:AnyObject]
+        var position : [String:Double]
         if let lon = self.longitude, let lat = self.latitude {
-             geoJsonPoint = [
+            // google.maps.LatLngLiteral | speed
+            position = [
+                "lat": lat,
+                "lng": lon,
+            ]
+            // deprecate: GeoJsonPoint is the format for MongoDB $near queries
+            geoJsonPoint = [
                 "type": "Point",
                 "coordinates": [lon, lat]
             ]
             if let speed = self.speed {
+                position["speed"] = speed
                 geoJsonPoint["speed"] = speed
             }
+            aCoder.encodeObject(position, forKey: "position")
             aCoder.encodeObject(geoJsonPoint, forKey: "location")
         }
-
+        
         aCoder.encodeObject(self.momentId, forKey: "momentId")
         aCoder.encodeObject(self.momentLocationName, forKey: "momentLocationName")
     }
-
+    
     required init?(coder aDecoder: NSCoder) {
         // required
         guard
@@ -93,13 +110,17 @@ class CameraRollPhoto: NSObject, NSCoding {
             else {
                 return nil
         }
-
+        
         self.uuid = uuid
         self.filename = filename
         self.dateTaken = dateTaken
         self.mediaType = mediaType
         
-        
+        self.width = aDecoder.decodeIntegerForKey("width")
+        self.height = aDecoder.decodeIntegerForKey("height")
+        self.duration = aDecoder.decodeDoubleForKey("duration")
+
+        // deprecate, use 'position' instead
         if let geoJson = aDecoder.decodeObjectForKey("location") as! [String:AnyObject]?,
             let coord = geoJson["coordinates"] as! Array<Double>?
         {
@@ -107,25 +128,33 @@ class CameraRollPhoto: NSObject, NSCoding {
             self.latitude = coord[1]
             self.speed = geoJson["speed"] as! Double?
         }
-
+                
+        if let position = aDecoder.decodeObjectForKey("position") as! [String:Double]?
+        {
+            self.latitude = position["lat"]
+            self.longitude = position["lng"]
+            self.speed = position["speed"]
+        }
+        
         self.isFavorite = aDecoder.decodeBoolForKey("isFavorite")
         self.representsBurst = aDecoder.decodeBoolForKey("representsBurst")
         self.mediaSubtypes = PHAssetMediaSubtype(
             rawValue: (aDecoder.decodeObjectForKey("mediaSubtypes") as! UInt?)!
         )
-
+        
         // optional
         self.burstId = aDecoder.decodeObjectForKey("burstId") as! String?
         self.momentId = aDecoder.decodeObjectForKey("momentId") as! String?
         self.momentLocationName = aDecoder.decodeObjectForKey("momentLocationName") as! String?
-
+        
         super.init()
     }
-
-
+    
+    
     required init(
         uuid: String, filename: String, dateTaken: NSDate,
         mediaType: PHAssetMediaType, mediaSubtypes : PHAssetMediaSubtype,
+        width: Int, height: Int, duration: NSTimeInterval,
         isFavorite: Bool, burstId: String?, representsBurst: Bool,
         lon: Double?, lat: Double?, speed: Double?,
         momentId: String? = nil, momentLocationName: String? = nil
@@ -135,20 +164,23 @@ class CameraRollPhoto: NSObject, NSCoding {
         self.dateTaken = dateTaken
         self.mediaType = mediaType
         self.mediaSubtypes = mediaSubtypes       // NOTE: change to singular
+        self.width = width
+        self.height = height
+        self.duration = duration as Double
         self.isFavorite = isFavorite
         self.burstId = burstId
         self.representsBurst = representsBurst
-
+        
         self.longitude = lon
         self.latitude = lat
         self.speed = speed
-
+        
         self.momentId = momentId
         self.momentLocationName = momentLocationName
-
+        
         super.init()
     }
-
+    
     func coordinates() -> Array<String>? {
         if (self.longitude == nil || self.latitude == nil)
         {
@@ -156,34 +188,44 @@ class CameraRollPhoto: NSObject, NSCoding {
         }
         return ["\(self.longitude)", "\(self.latitude)"]
     }
-
+    
     func toJson() -> String {
-
+        
         dateFormatter.locale = enUSPosixLocale
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         let localTime = dateFormatter.stringFromDate(self.dateTaken)
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         dateFormatter.timeZone = NSTimeZone(abbreviation: "UTC")
         let iso8601Date = dateFormatter.stringFromDate(self.dateTaken)
-
+        
         var result = "\"uuid\":\"\(self.uuid)\""
         result += ", \"filename\":\"\(self.filename)\""
         if !iso8601Date.isEmpty {
             result += ", \"dateTaken\":\"\(iso8601Date)\""
             result += ", \"localTime\":\"\(localTime)\""
         }
-
+        
         result += ", \"mediaType\":\(self.mediaType.rawValue)"
         result += ", \"mediaSubypes\":\(self.mediaSubtypes.rawValue)"
+        result += ", \"width\":\(self.width)"
+        result += ", \"height\":\(self.height)"
+        result += ", \"duration\":\(self.duration)"
         result += ", \"isFavorite\":\(self.isFavorite)"
-
+        
         if let burstId = self.burstId {
             result += ", \"burstId\":\"\(burstId)\""
             result += ", \"representsBurst\":\(self.representsBurst)"
         }
-
-
+        
+        
         if (self.longitude != nil && self.latitude != nil) {
+            // google.maps.LatLngLiteral
+            var position = "\"lat\":\(self.latitude!), \"lng\":\(self.longitude!)"
+            if self.speed != nil {
+                position += ", \"speed\":\(self.speed!)"
+            }
+            result += ", \"position\":{" + position + "}"
+
             // format as geoJson Point
             let type = "Point"
             var location = "\"type\":\"\(type)\""
@@ -192,35 +234,35 @@ class CameraRollPhoto: NSObject, NSCoding {
                 location += ", \"speed\":\(self.speed!)"
             }
             result += ", \"location\":{" + location + "}"
-
+            
         } else {
             result += ", \"location\":null"
         }
-
+        
         if (self.momentId != nil) {
             result += ", \"momentId\":\"\(self.momentId!)\""
             result += ", \"momentLocationName\":\"\(self.momentLocationName!)\""
         }
-
-
+        
+        
         return "{" + result + "}"
     }
 }
 
 
 class PhotoWithLocationService {
-
+    
     func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [CameraRollPhoto] {
         var result : Array<CameraRollPhoto> = []
-
+        
         let options = PHFetchOptions()
         options.sortDescriptors = [ NSSortDescriptor(key: "creationDate", ascending: false) ]
-//        options.predicate =  NSPredicate(format: "mediaType = %i", PHAssetMediaType.Image.rawValue)
-
+        //        options.predicate =  NSPredicate(format: "mediaType = %i", PHAssetMediaType.Image.rawValue)
+        
         let moments = PHAssetCollection.fetchMomentsWithOptions(nil)
         for j in 0 ..< moments.count {
             let moment = moments[j] as! PHAssetCollection
-
+            
             // optional params
             if from != nil {
                 guard let startDate = moment.startDate where from!.compare(startDate) != NSComparisonResult.OrderedDescending
@@ -234,19 +276,19 @@ class PhotoWithLocationService {
                         continue
                 }
             }
-
-
+            
+            
             guard moment.localizedLocationNames.count > 0 else {
                 continue
             }
             // moment = {localIdentifier: UUID, localizedLocationNames:[], startDate: NSDate, endDate:NSDate }
-//            print(moment)
-
+            //            print(moment)
+            
             let assets = PHAsset.fetchAssetsInAssetCollection(moment, options: options)
             let retval = mapLocations(assets, moment:moment)
             result += retval
         }
-
+        
         if DEBUG {
             var asJson = ""
             for o in result {
@@ -257,30 +299,30 @@ class PhotoWithLocationService {
             }
             print( "[\(asJson)]")
         }
-
+        
         return result
     }
-
-
+    
+    
     func mapLocations(assets: PHFetchResult, from: NSDate? = nil, to: NSDate? = nil, moment: PHAssetCollection? = nil) -> [CameraRollPhoto]
     {
-
+        
         // TODO: add moment? as a Dictionary with keys: startDate, endDate, count
         let locationName = moment?.localizedLocationNames.joinWithSeparator(", ")
         let locationUuid = moment?.localIdentifier
-
-
+        
+        
         var result : Array<CameraRollPhoto> = []
         for i in 0 ..< assets.count
         {
-
+            
             let asset = assets[i]
-
+            
             // is within date range, as necessary
             // TODO: if from, to, moment are all provided, check if moment.startDate, etc.
             guard
                 let dateTaken = asset.creationDate as NSDate? else {
-                continue
+                    continue
             }
             if from != nil {
                 guard
@@ -296,7 +338,7 @@ class PhotoWithLocationService {
                         continue
                 }
             }
-
+            
             // is NOT hidden
             guard let isHidden = asset.hidden where isHidden == false else {
                 continue
@@ -314,30 +356,31 @@ class PhotoWithLocationService {
                 else {
                     continue
             }
-
+            
             var lon: Double?
             var lat: Double?
             var speed: Double?  //  in meters/second
-
-
+            
+            
             if let location = asset.location as CLLocation? {
                 lon = location.coordinate.longitude
                 lat = location.coordinate.latitude
                 speed = location.speed
             }
-
+            
             let photo = CameraRollPhoto(
                 uuid: uuid, filename: filename, dateTaken: dateTaken,
                 mediaType: asset.mediaType, mediaSubtypes : asset.mediaSubtypes,
+                width: asset.pixelWidth, height: asset.pixelHeight, duration: asset.duration,
                 isFavorite: asset.favorite, burstId: asset.burstIdentifier, representsBurst: asset.representsBurst,
                 lon: lon, lat: lat, speed: speed,
                 momentId: locationUuid, momentLocationName: locationName
             )
             result.append(photo)
-
+            
         }
-
+        
         return result
     }
-
+    
 }

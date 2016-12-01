@@ -35,31 +35,46 @@ Xcode version: Xcode 7.3 Build version 7D175
 * see the demo: https://github.com/mixersoft/ionic2-camera-roll-location-demo
 
 ```javascript
-// typescript
+// typescript 
 interface cameraRollPhoto {
   uuid: string,
   filename: string,
-  location: location,
   dateTaken: string, // isoDate
-  localTime: string, // YYYY-MM-DD HH:MM:SS.SSS
+  localTime: string | Date, // YYYY-MM-DD HH:MM:SS.SSS
   mediaType: number,
   mediaSubtype: number,
+  width: number,
+  height: number,
+  duration: number,
+  location?: GeoJsonPoint,      // deprecate
+  position?: LatLngSpeedLiteral,
   momentId?: string,
   momentLocationName?: string
 }
 
+// deprecate
 interface location {
   type: string,
   coordinates: [number,number]  // [lon, lat]
   speed?: number
 }
 
-interface optionsGetByMoments {
+// same as google.maps.LatLngLiteral | {speed}
+interface LatLngSpeedLiteral {
+  lat: number,
+  lng: number,
+  speed: number
+}
+
+interface optionsGetCameraRoll {
   from?: Date,
   to?: Date,
   mediaType?: mediaType,
   mediaSubtype?: mediaSubtype
 }
+
+// deprecate
+type optionsGetByMoments = optionsGetCameraRoll;
 
 /**
 * get photos from CameraRoll together with location and moment data
@@ -68,11 +83,17 @@ interface optionsGetByMoments {
 *
 * plugin = window.cordova.plugins.CameraRollLocation
 *
-* @param  {optionsGetByMoments}    options {from:, to:, mediaType:, mediaSubtypes: }
+* @param  {optionsGetCameraRoll}   options {from:, to:, mediaType:, mediaSubtypes: }
 * @param  function NodeCallback    nodejs style callback, i.e. (err, resp)=>{}
 * @return [cameraRollPhoto,]       array of cameraRollPhoto
 */
 class CameraRollPhoto {
+    getCameraRoll(
+      options: optionsGetCameraRoll
+      , callback: (err:any, resp:any)=>void
+    ) : void
+
+    // deprecate
     getByMoments(
       options: optionsGetByMoments
       , callback: (err:any, resp:any)=>void
@@ -85,7 +106,7 @@ platform.ready().then(() => {
   // Okay, so the platform is ready and our plugins are available.
 
   const plugin = cordova.plugins.CameraRollLocation;
-  const results = plugin.getByMoments(
+  const results = plugin.getCameraRoll(
     {
       from: new Date('2016-09-01'),
       to: new Date('2016-09-30')
@@ -93,7 +114,7 @@ platform.ready().then(() => {
     , (err, resp) => {
       if (err) return console.error(err)
       if (!resp || !resp.length) return console.info("plugin resp = empty")
-      console.info(`plugin getByMoments() result[0...5]=${ resp.slice(0,5) }`);
+      console.info(`plugin getCameraRoll() result[0...5]=${ resp.slice(0,5) }`);
     }
   );
 

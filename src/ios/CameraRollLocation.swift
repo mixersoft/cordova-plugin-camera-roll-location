@@ -35,8 +35,12 @@ class Date {
 
 @objc(CameraRollLocation) class CameraRollLocation : CDVPlugin {
 
-
+  // deprecate
   func getByMoments(command: CDVInvokedUrlCommand) {
+      return self.getCameraRoll(command);
+  }
+
+  func getCameraRoll(command: CDVInvokedUrlCommand) {
     var pluginResult = CDVPluginResult(
       status: CDVCommandStatus_ERROR
     )
@@ -73,7 +77,7 @@ class Date {
                     asJson += ", "
                 }
                 asJson += "\(o.toJson())"
-                data.append( NSKeyedArchiver.archivedDataWithRootObject(o) )
+                // data.append( NSKeyedArchiver.archivedDataWithRootObject(o) )
             }
             asJson = "[\(asJson)]"
 

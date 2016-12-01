@@ -21,8 +21,75 @@
  * @SNAPHAPPI_LICENSE_HEADER_END@
  */
 declare module "location-helper" {
-    import { LatLng } from "camera-roll.types";
     export function round(v: number, precision?: number): number;
+    /**
+     * A LatLng is a point in geographical coordinates: latitude and longitude.
+     *
+     * * Latitude ranges between -90 and 90 degrees, inclusive. Values above or
+     *   below this range will be clamped to the range [-90, 90]. This means
+     *   that if the value specified is less than -90, it will be set to -90.
+     *   And if the value is greater than 90, it will be set to 90.
+     * * Longitude ranges between -180 and 180 degrees, inclusive. Values above
+     *   or below this range will be wrapped so that they fall within the
+     *   range. For example, a value of -190 will be converted to 170. A value
+     *   of 190 will be converted to -170. This reflects the fact that
+     *   longitudes wrap around the globe.
+     *
+     * Although the default map projection associates longitude with the
+     * x-coordinate of the map, and latitude with the y-coordinate, the
+     * latitude coordinate is always written first, followed by the longitude.
+     * Notice that you cannot modify the coordinates of a LatLng. If you want
+     * to compute another point, you have to create a new one.
+     */
+    export interface LatLngLiteral {
+        lat: number;
+        lng: number;
+    }
+    export interface LatLngSpeedLiteral extends LatLngLiteral {
+        speed?: number;
+    }
+    export interface LatLng {
+        /**
+         * Creates a LatLng object representing a geographic point.
+         * Note the ordering of latitude and longitude.
+         * @param lat Latitude is specified in degrees within the range [-90, 90].
+         * @param lng Longitude is specified in degrees within the range [-180, 180].
+         * @param noWrap Set noWrap to true to enable values outside of this range.
+         */
+        /** Comparison function. */
+        equals(other: LatLng): boolean;
+        /** Returns the latitude in degrees. */
+        lat(): number;
+        /** Returns the longitude in degrees. */
+        lng(): number;
+        /** Converts to string representation. */
+        toString(): string;
+        /** Returns a string of the form "lat,lng". We round the lat/lng values to 6 decimal places by default. */
+        toUrlValue(precision?: number): string;
+    }
+    export type LatLngBoundsLiteral = {
+        east: number;
+        north: number;
+        south: number;
+        west: number;
+    };
+    export interface LatLngBounds {
+        contains(latLng: LatLng): boolean;
+        equals(other: LatLngBounds | LatLngBoundsLiteral): boolean;
+        extend(point: LatLng): LatLngBounds;
+        getCenter(): LatLng;
+        getNorthEast(): LatLng;
+        getSouthWest(): LatLng;
+        intersects(other: LatLngBounds | LatLngBoundsLiteral): boolean;
+        isEmpty(): boolean;
+        toSpan(): LatLng;
+        toString(): string;
+        toUrlValue(precision?: number): string;
+        union(other: LatLngBounds | LatLngBoundsLiteral): LatLngBounds;
+    }
+    /**
+     * GeoJsonPoint format used by MongoDB $near queries
+     */
     export interface GeoJson {
         type: string;
         coordinates: [number, number];
@@ -112,7 +179,7 @@ declare module "location-helper" {
     export function distanceBetweenLatLng(p1: LatLng, p2: LatLng): number;
 }
 declare module "camera-roll.types" {
-    import { GeoJson, GeoJsonPoint } from "location-helper";
+    import { LatLngSpeedLiteral, LatLngBounds, GeoJson, GeoJsonPoint } from "location-helper";
     export interface optionsPlugin {
         from?: Date;
         to?: Date;
@@ -146,84 +213,27 @@ declare module "camera-roll.types" {
     export interface cameraRollPhoto {
         uuid: string;
         filename: string;
-        location: GeoJsonPoint;
         dateTaken: string;
-        localTime: string;
+        localTime: string | Date;
         mediaType: number;
         mediaSubtype: number;
+        width: number;
+        height: number;
+        duration: number;
+        location?: GeoJsonPoint;
+        position?: LatLngSpeedLiteral;
         momentId?: string;
         momentLocationName?: string;
     }
-    export interface optionsGetByMoments {
+    export interface optionsGetCameraRoll {
         from?: Date;
         to?: Date;
         mediaType?: mediaType;
         mediaSubtype?: mediaSubtype;
     }
+    export type optionsGetByMoments = optionsGetCameraRoll;
     export interface NodeCallback {
         (err: any, data: any): void;
-    }
-    /**
-     * A LatLng is a point in geographical coordinates: latitude and longitude.
-     *
-     * * Latitude ranges between -90 and 90 degrees, inclusive. Values above or
-     *   below this range will be clamped to the range [-90, 90]. This means
-     *   that if the value specified is less than -90, it will be set to -90.
-     *   And if the value is greater than 90, it will be set to 90.
-     * * Longitude ranges between -180 and 180 degrees, inclusive. Values above
-     *   or below this range will be wrapped so that they fall within the
-     *   range. For example, a value of -190 will be converted to 170. A value
-     *   of 190 will be converted to -170. This reflects the fact that
-     *   longitudes wrap around the globe.
-     *
-     * Although the default map projection associates longitude with the
-     * x-coordinate of the map, and latitude with the y-coordinate, the
-     * latitude coordinate is always written first, followed by the longitude.
-     * Notice that you cannot modify the coordinates of a LatLng. If you want
-     * to compute another point, you have to create a new one.
-     */
-    export interface LatLng {
-        /**
-         * Creates a LatLng object representing a geographic point.
-         * Note the ordering of latitude and longitude.
-         * @param lat Latitude is specified in degrees within the range [-90, 90].
-         * @param lng Longitude is specified in degrees within the range [-180, 180].
-         * @param noWrap Set noWrap to true to enable values outside of this range.
-         */
-        /** Comparison function. */
-        equals(other: LatLng): boolean;
-        /** Returns the latitude in degrees. */
-        lat(): number;
-        /** Returns the longitude in degrees. */
-        lng(): number;
-        /** Converts to string representation. */
-        toString(): string;
-        /** Returns a string of the form "lat,lng". We round the lat/lng values to 6 decimal places by default. */
-        toUrlValue(precision?: number): string;
-    }
-    export type LatLngLiteral = {
-        lat: number;
-        lng: number;
-    };
-    export type LatLngBoundsLiteral = {
-        east: number;
-        north: number;
-        south: number;
-        west: number;
-    };
-    export interface LatLngBounds {
-        contains(latLng: LatLng): boolean;
-        equals(other: LatLngBounds | LatLngBoundsLiteral): boolean;
-        extend(point: LatLng): LatLngBounds;
-        getCenter(): LatLng;
-        getNorthEast(): LatLng;
-        getSouthWest(): LatLng;
-        intersects(other: LatLngBounds | LatLngBoundsLiteral): boolean;
-        isEmpty(): boolean;
-        toSpan(): LatLng;
-        toString(): string;
-        toUrlValue(precision?: number): string;
-        union(other: LatLngBounds | LatLngBoundsLiteral): LatLngBounds;
     }
     export interface Point {
         /** A point on a two-dimensional plane. */
@@ -310,16 +320,17 @@ declare module "camera-roll.service" {
     }
 }
 declare module "cordova-plugin" {
-    import { cameraRollPhoto, NodeCallback, optionsGetByMoments } from "camera-roll.types";
+    import { cameraRollPhoto, NodeCallback, optionsGetCameraRoll } from "camera-roll.types";
     /**
      * This is the ACTUAL cordova plugin method call
      * plugin method wrapper for CameraRollWithLoc class
      * calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec
      * swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [PhotoWithLoc]
      *
-     * @param  {getByMomentsOptions}   options {from:, to: mediaType: mediaSubtypes: }
+     * @param  {optionsGetCameraRoll}   options {from:, to: mediaType: mediaSubtypes: }
      * @param  callback()              OPTIONAL nodejs style callback, i.e. (err, resp)=>{}
      * @return Promise() or void       returns a Promise if callback is NOT provided
      */
-    export function getByMoments(options: optionsGetByMoments, callback: NodeCallback): Promise<cameraRollPhoto[]>;
+    export function getCameraRoll(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
+    export function getByMoments(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
 }
