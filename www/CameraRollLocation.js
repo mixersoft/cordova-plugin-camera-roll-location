@@ -476,6 +476,9 @@ var camera_roll_service_1 = exports;
             }
             return this._isProcessing.then(function (photos) {
                 photos.forEach(function (o) {
+                    if (o.localTime && typeof o.localTime == "string") {
+                        o.localTime = _localTimeAsDate(o.localTime);
+                    }
                     // deprecate
                     if (o.location && o.location instanceof location_helper_1.GeoJsonPoint == false) {
                         o.location = new location_helper_1.GeoJsonPoint(o.location);

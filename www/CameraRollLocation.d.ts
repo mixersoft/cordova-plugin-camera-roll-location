@@ -334,3 +334,4 @@ declare module "cordova-plugin" {
     export function getCameraRoll(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
     export function getByMoments(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
 }
+

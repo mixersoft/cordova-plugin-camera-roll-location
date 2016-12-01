@@ -134,16 +134,15 @@ platform.ready().then(() => {
   "mediaType": 1,
   "mediaSubypes": 0,
   "isFavorite": false,
-  "location": {
-    "type": "Point",
-    "coordinates": [
-      23.3138,
-      42.6704
-    ],
+  "width": 286,
+  "height": 183,
+  "position": {
+    "lat": 48.8583736,
+    "lng": 2.2922873,
     "speed": 1.54
   },
   "momentId": "XXXXXXXX-XXXX-XXXX-XXXX-1F2FD88BA004/L0/060",
-  "momentLocationName": "Sofia"
+  "momentLocationName": "Paris"
 }]
 ```
 
