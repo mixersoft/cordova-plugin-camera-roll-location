@@ -36,7 +36,7 @@ class CameraRollPhoto: NSObject, NSCoding {
     
     let uuid: String
     var filename: String
-    let dateTaken: NSDate
+    let dateTaken: Date
     let mediaType: PHAssetMediaType
     let mediaSubtypes: PHAssetMediaSubtype
     
@@ -55,25 +55,25 @@ class CameraRollPhoto: NSObject, NSCoding {
     var momentId: String?
     var momentLocationName: String?
     
-    let dateFormatter = NSDateFormatter()
+    let dateFormatter = DateFormatter()
     let enUSPosixLocale = NSLocale(localeIdentifier: "en_US_POSIX")
     
     // for NSCoding
     // see: https://developer.apple.com/library/content/referencelibrary/GettingStarted/DevelopiOSAppsSwift/Lesson10.html
-    func encodeWithCoder(aCoder: NSCoder) {
-        aCoder.encodeObject(self.uuid, forKey: "uuid")
-        aCoder.encodeObject(self.filename, forKey: "filename")
-        aCoder.encodeObject(self.dateTaken, forKey: "dateTaken")
-        aCoder.encodeInteger(self.mediaType.rawValue, forKey: "mediaType")
-        aCoder.encodeObject(self.mediaSubtypes.rawValue, forKey: "mediaSubtypes")
-        aCoder.encodeInteger(self.width, forKey: "width")
-        aCoder.encodeInteger(self.height, forKey: "height")
-        aCoder.encodeDouble(self.duration, forKey: "duration")
-        aCoder.encodeBool(self.isFavorite, forKey: "isFavorite")
-        aCoder.encodeObject(self.burstId, forKey: "burstId")
-        aCoder.encodeBool(self.representsBurst, forKey: "representsBurst")
+    func encode(with aCoder: NSCoder) {
+        aCoder.encode(self.uuid, forKey: "uuid")
+        aCoder.encode(self.filename, forKey: "filename")
+        aCoder.encode(self.dateTaken, forKey: "dateTaken")
+        aCoder.encode(self.mediaType.rawValue, forKey: "mediaType")
+        aCoder.encode(self.mediaSubtypes.rawValue, forKey: "mediaSubtypes")
+        aCoder.encode(self.width, forKey: "width")
+        aCoder.encode(self.height, forKey: "height")
+        aCoder.encode(self.duration, forKey: "duration")
+        aCoder.encode(self.isFavorite, forKey: "isFavorite")
+        aCoder.encode(self.burstId, forKey: "burstId")
+        aCoder.encode(self.representsBurst, forKey: "representsBurst")
         
-        var geoJsonPoint : [String:AnyObject]
+        var geoJsonPoint : [String:Any]
         var position : [String:Double]
         if let lon = self.longitude, let lat = self.latitude {
             // google.maps.LatLngLiteral | speed
@@ -88,24 +88,25 @@ class CameraRollPhoto: NSObject, NSCoding {
             ]
             if let speed = self.speed {
                 position["speed"] = speed
-                geoJsonPoint["speed"] = speed
+
+                geoJsonPoint["speed"] = speed as AnyObject?
             }
-            aCoder.encodeObject(position, forKey: "position")
-            aCoder.encodeObject(geoJsonPoint, forKey: "location")
+            aCoder.encode(position, forKey: "position")
+            aCoder.encode(geoJsonPoint, forKey: "location")
         }
         
-        aCoder.encodeObject(self.momentId, forKey: "momentId")
-        aCoder.encodeObject(self.momentLocationName, forKey: "momentLocationName")
+        aCoder.encode(self.momentId, forKey: "momentId")
+        aCoder.encode(self.momentLocationName, forKey: "momentLocationName")
     }
     
     required init?(coder aDecoder: NSCoder) {
         // required
         guard
-            let uuid = aDecoder.decodeObjectForKey("uuid") as! String?,
-            let filename = aDecoder.decodeObjectForKey("filename") as! String?,
-            let dateTaken = aDecoder.decodeObjectForKey("dateTaken") as! NSDate?,
+            let uuid = aDecoder.decodeObject(forKey: "uuid") as! String?,
+            let filename = aDecoder.decodeObject(forKey: "filename") as! String?,
+            let dateTaken = aDecoder.decodeObject(forKey: "dateTaken") as! Date?,
             let mediaType = PHAssetMediaType(
-                rawValue: aDecoder.decodeIntegerForKey("mediaType")
+                rawValue: aDecoder.decodeInteger(forKey: "mediaType")
             )
             else {
                 return nil
@@ -116,12 +117,12 @@ class CameraRollPhoto: NSObject, NSCoding {
         self.dateTaken = dateTaken
         self.mediaType = mediaType
         
-        self.width = aDecoder.decodeIntegerForKey("width")
-        self.height = aDecoder.decodeIntegerForKey("height")
-        self.duration = aDecoder.decodeDoubleForKey("duration")
+        self.width = aDecoder.decodeInteger(forKey: "width")
+        self.height = aDecoder.decodeInteger(forKey: "height")
+        self.duration = aDecoder.decodeDouble(forKey: "duration")
 
         // deprecate, use 'position' instead
-        if let geoJson = aDecoder.decodeObjectForKey("location") as! [String:AnyObject]?,
+        if let geoJson = aDecoder.decodeObject(forKey: "location") as! [String:AnyObject]?,
             let coord = geoJson["coordinates"] as! Array<Double>?
         {
             self.longitude = coord[0]
@@ -129,32 +130,32 @@ class CameraRollPhoto: NSObject, NSCoding {
             self.speed = geoJson["speed"] as! Double?
         }
                 
-        if let position = aDecoder.decodeObjectForKey("position") as! [String:Double]?
+        if let position = aDecoder.decodeObject(forKey: "position") as! [String:Double]?
         {
             self.latitude = position["lat"]
             self.longitude = position["lng"]
             self.speed = position["speed"]
         }
         
-        self.isFavorite = aDecoder.decodeBoolForKey("isFavorite")
-        self.representsBurst = aDecoder.decodeBoolForKey("representsBurst")
+        self.isFavorite = aDecoder.decodeBool(forKey: "isFavorite")
+        self.representsBurst = aDecoder.decodeBool(forKey: "representsBurst")
         self.mediaSubtypes = PHAssetMediaSubtype(
-            rawValue: (aDecoder.decodeObjectForKey("mediaSubtypes") as! UInt?)!
+            rawValue: (aDecoder.decodeObject(forKey: "mediaSubtypes") as! UInt?)!
         )
         
         // optional
-        self.burstId = aDecoder.decodeObjectForKey("burstId") as! String?
-        self.momentId = aDecoder.decodeObjectForKey("momentId") as! String?
-        self.momentLocationName = aDecoder.decodeObjectForKey("momentLocationName") as! String?
+        self.burstId = aDecoder.decodeObject(forKey: "burstId") as! String?
+        self.momentId = aDecoder.decodeObject(forKey: "momentId") as! String?
+        self.momentLocationName = aDecoder.decodeObject(forKey: "momentLocationName") as! String?
         
         super.init()
     }
     
     
     required init(
-        uuid: String, filename: String, dateTaken: NSDate,
+        uuid: String, filename: String, dateTaken: Date,
         mediaType: PHAssetMediaType, mediaSubtypes : PHAssetMediaSubtype,
-        width: Int, height: Int, duration: NSTimeInterval,
+        width: Int, height: Int, duration: TimeInterval,
         isFavorite: Bool, burstId: String?, representsBurst: Bool,
         lon: Double?, lat: Double?, speed: Double?,
         momentId: String? = nil, momentLocationName: String? = nil
@@ -191,12 +192,12 @@ class CameraRollPhoto: NSObject, NSCoding {
     
     func toJson() -> String {
         
-        dateFormatter.locale = enUSPosixLocale
+        dateFormatter.locale = enUSPosixLocale as Locale!
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        let localTime = dateFormatter.stringFromDate(self.dateTaken)
+        let localTime = dateFormatter.string(from:self.dateTaken)
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        dateFormatter.timeZone = NSTimeZone(abbreviation: "UTC")
-        let iso8601Date = dateFormatter.stringFromDate(self.dateTaken)
+        dateFormatter.timeZone = NSTimeZone(abbreviation: "UTC") as TimeZone!
+        let iso8601Date = dateFormatter.string(from:self.dateTaken)
         
         var result = "\"uuid\":\"\(self.uuid)\""
         result += ", \"filename\":\"\(self.filename)\""
@@ -252,26 +253,26 @@ class CameraRollPhoto: NSObject, NSCoding {
 
 class PhotoWithLocationService {
     
-    func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [CameraRollPhoto] {
+    func getByMoments(from: Date? = nil, to: Date? = nil) -> [CameraRollPhoto] {
         var result : Array<CameraRollPhoto> = []
         
         let options = PHFetchOptions()
         options.sortDescriptors = [ NSSortDescriptor(key: "creationDate", ascending: false) ]
         //        options.predicate =  NSPredicate(format: "mediaType = %i", PHAssetMediaType.Image.rawValue)
         
-        let moments = PHAssetCollection.fetchMomentsWithOptions(nil)
+        let moments = PHAssetCollection.fetchMoments(with: nil)
         for j in 0 ..< moments.count {
-            let moment = moments[j] as! PHAssetCollection
+            let moment = moments[j] 
             
             // optional params
             if from != nil {
-                guard let startDate = moment.startDate where from!.compare(startDate) != NSComparisonResult.OrderedDescending
+                guard let startDate = moment.startDate, from!.compare(startDate) != ComparisonResult.orderedDescending
                     else {
                         continue
                 }
             }
             if to != nil {
-                guard let endDate = moment.endDate where to!.compare(endDate) != NSComparisonResult.OrderedAscending
+                guard let endDate = moment.endDate, to!.compare(endDate) != ComparisonResult.orderedAscending
                     else {
                         continue
                 }
@@ -284,8 +285,8 @@ class PhotoWithLocationService {
             // moment = {localIdentifier: UUID, localizedLocationNames:[], startDate: NSDate, endDate:NSDate }
             //            print(moment)
             
-            let assets = PHAsset.fetchAssetsInAssetCollection(moment, options: options)
-            let retval = mapLocations(assets, moment:moment)
+            let assets = PHAsset.fetchAssets(in: moment, options: options)
+            let retval = mapLocations(assets: assets, moment:moment)
             result += retval
         }
         
@@ -304,11 +305,11 @@ class PhotoWithLocationService {
     }
     
     
-    func mapLocations(assets: PHFetchResult, from: NSDate? = nil, to: NSDate? = nil, moment: PHAssetCollection? = nil) -> [CameraRollPhoto]
+    func mapLocations(assets: PHFetchResult<PHAsset>, from: Date? = nil, to: Date? = nil, moment: PHAssetCollection? = nil) -> [CameraRollPhoto]
     {
         
         // TODO: add moment? as a Dictionary with keys: startDate, endDate, count
-        let locationName = moment?.localizedLocationNames.joinWithSeparator(", ")
+        let locationName = moment?.localizedLocationNames.joined(separator: ", ")
         let locationUuid = moment?.localIdentifier
         
         
@@ -321,42 +322,41 @@ class PhotoWithLocationService {
             // is within date range, as necessary
             // TODO: if from, to, moment are all provided, check if moment.startDate, etc.
             guard
-                let dateTaken = asset.creationDate as NSDate? else {
+                let dateTaken = asset.creationDate as Date? else {
                     continue
             }
             if from != nil {
                 guard
-                    from!.compare(dateTaken) != NSComparisonResult.OrderedAscending
+                    from!.compare(dateTaken) != ComparisonResult.orderedAscending
                     else {
                         continue
                 }
             }
             if to != nil{
                 guard
-                    to!.compare(dateTaken) != NSComparisonResult.OrderedDescending
+                    to!.compare(dateTaken) != ComparisonResult.orderedDescending
                     else {
                         continue
                 }
             }
             
             // is NOT hidden
-            guard let isHidden = asset.hidden where isHidden == false else {
+            if asset.isHidden == true {
                 continue
             }
             // is Image or Video
-            guard case let mediaType = asset.mediaType as PHAssetMediaType
-                where mediaType == .Image || mediaType == .Video
+            guard case let mediaType = asset.mediaType as PHAssetMediaType, mediaType == .image || mediaType == .video
                 else {
                     continue
             }
             // has required properties
             guard
-                let uuid = asset.localIdentifier,
-                let filename = asset.valueForKey("filename") as! String?
+                let filename = asset.value(forKey: "filename") as! String?
                 else {
                     continue
             }
             
+            let uuid = asset.localIdentifier
             var lon: Double?
             var lat: Double?
             var speed: Double?  //  in meters/second
@@ -372,7 +372,7 @@ class PhotoWithLocationService {
                 uuid: uuid, filename: filename, dateTaken: dateTaken,
                 mediaType: asset.mediaType, mediaSubtypes : asset.mediaSubtypes,
                 width: asset.pixelWidth, height: asset.pixelHeight, duration: asset.duration,
-                isFavorite: asset.favorite, burstId: asset.burstIdentifier, representsBurst: asset.representsBurst,
+                isFavorite: asset.isFavorite, burstId: asset.burstIdentifier, representsBurst: asset.representsBurst,
                 lon: lon, lat: lat, speed: speed,
                 momentId: locationUuid, momentLocationName: locationName
             )

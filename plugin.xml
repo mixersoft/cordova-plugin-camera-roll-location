@@ -13,6 +13,9 @@
           <param name="ios-package" value="CameraRollLocation" />
         </feature>
       </config-file>
+      <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+        <string>Photo Library Access Warning</string>
+      </config-file>
       <source-file src="src/ios/CameraRollLocation.swift" />
       <source-file src="src/ios/PhotoWithLocationService.swift" />
     </platform>

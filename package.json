@@ -1,6 +1,6 @@
 {
 	"name": "cordova-plugin-camera-roll-location",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "get location metadata with photos from CameraRoll",
 	"cordova": {
 		"id": "com-snaphappi-plugin-camera-roll-location",

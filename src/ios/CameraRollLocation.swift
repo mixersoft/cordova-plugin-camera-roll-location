@@ -23,41 +23,34 @@
 
 // import PhotoWithLocationService;
 
-class Date {
-  // adjust for localTime
-  class func parse(dateStr:String, format:String="yyyy-MM-dd") -> NSDate {
-      let dateFmt = NSDateFormatter()
-      dateFmt.timeZone = NSTimeZone.defaultTimeZone()
-      dateFmt.dateFormat = format
-      return dateFmt.dateFromString(dateStr)!
-  }
-}
-
 @objc(CameraRollLocation) class CameraRollLocation : CDVPlugin {
 
   // deprecate
-  func getByMoments(command: CDVInvokedUrlCommand) {
-      return self.getCameraRoll(command);
+  @objc(getByMoments:) func getByMoments(command: CDVInvokedUrlCommand) {
+      return self.getCameraRoll(command: command);
   }
 
-  func getCameraRoll(command: CDVInvokedUrlCommand) {
+  @objc(getCameraRoll:) func getCameraRoll(command: CDVInvokedUrlCommand) {
+    let dateFmt = DateFormatter()
+    dateFmt.dateFormat = "yyyy-MM-dd"
+    
     var pluginResult = CDVPluginResult(
       status: CDVCommandStatus_ERROR
     )
 
     // let options = command.arguments[0] as? String ?? ""
-    let options = command.arguments[0];
+    let options : [String:Any] = command.arguments[0] as! [String:Any];
 
     // prepare params
-    var fromDate : NSDate? = nil;
-    var toDate : NSDate? = nil;
+    var fromDate : Date? = nil;
+    var toDate : Date? = nil;
     if let from = options["from"] as! NSString? {
-        fromDate = Date.parse( from.substringToIndex(10) )
-        print("FROM: \( from.substringToIndex(10) ) => \(fromDate)")
+        fromDate = dateFmt.date(from: from.substring(to: 10))
+        print("FROM: \( from.substring(to: 10) ) => \(fromDate)")
     }
     if let to = options["to"] as! NSString? {
-        toDate = Date.parse( to.substringToIndex(10) )
-        print("TO: \( to.substringToIndex(10) ) => \(toDate)")
+        toDate = dateFmt.date(from: to.substring(to: 10))
+        print("TO: \( to.substring(to: 10) ) => \(toDate)")
     }
 
     // get result from CameraRoll
@@ -65,7 +58,7 @@ class Date {
     var data : [NSData] = []
 
     // runInBackground
-    self.commandDelegate!.runInBackground({
+    self.commandDelegate!.run(inBackground: {
 
         let result = cameraRoll.getByMoments(from:fromDate, to:toDate);
         if result.count > 0 {
@@ -83,12 +76,12 @@ class Date {
 
             pluginResult = CDVPluginResult(
                 status: CDVCommandStatus_OK,
-                messageAsString: asJson
+                messageAs: asJson
             )
           } else if result.count == 0 {
               pluginResult = CDVPluginResult(
                   status: CDVCommandStatus_OK,
-                  messageAsString: "[]"
+                  messageAs: "[]"
               )
           }
 
@@ -102,7 +95,7 @@ class Date {
 //    )
 
         // send result in Background
-        self.commandDelegate!.sendPluginResult(
+        self.commandDelegate!.send(
             pluginResult,
             callbackId: command.callbackId
         )
