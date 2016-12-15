@@ -404,6 +404,7 @@ var camera_roll_service_1 = exports;
          */
         CameraRollWithLoc.prototype.queryPhotos = function (options, force) {
             var _this = this;
+            if (options === void 0) { options = {}; }
             if (force === void 0) { force = false; }
             if (!this._isProcessing && this._photos.length && !options && force == false) {
                 // resolve immediately with cached value
@@ -620,9 +621,46 @@ var camera_roll_service_1 = exports;
         return promise;
     }
     exports.getCameraRoll = getCameraRoll;
+
+    /**
+     * get a scaled image for UI
+     */
+    function getImage( uuids, options, resolve, reject ){
+        opt = {}
+        var keys = ['width', 'height', 'version', 'resizeMode', 'deliveryMode', 'rawDataURI'];
+        keys.forEach( function(k){
+            if (options[k]) {
+                if (k=='width' || k=='height') {
+                    opt[k] = Math.round(parseInt(options[k]));
+                } else
+                    opt[k] = options[k];
+            }
+        } )
+        // CGSize: let size = CGSize(width: 20, height: 30)
+        // resizeMode: PHImageRequestOptionsResizeMode{ none, fast, exact}
+        var resolve0 = function(result){
+            try {
+                if (result === void 0) { result = {}; }
+                var data = typeof result == "string" ? JSON.parse(result) : result;
+                if (!options.rawDataURI) {
+                    var base64prefix = "data:image/jpeg;base64,";
+                    Object.keys(data).forEach(function(key){  data[key] = base64prefix + data[key] });
+                }
+                resolve(data);
+            }
+            catch (err) {
+                return reject({ error: err, response: result });
+            }
+        }
+        exec(resolve0, reject, "cameraRollLocation", "getImage", [uuids, opt]);
+    }
+    exports.getImage = getImage;
+
     // deprecate
     function getByMoments(options, callback) {
         return getCameraRoll(options, callback);
     }
     exports.getByMoments = getByMoments;
+
+
 // });

@@ -102,4 +102,39 @@
     })
 
   }
+
+
+  // experimental
+  @objc(getImage:) func getImage(command: CDVInvokedUrlCommand) {
+    let uuids : [String] = command.arguments[0] as! [String];
+    let options : [String:Any] = command.arguments[1] as! [String:Any];
+
+    var pluginResult = CDVPluginResult(
+        status: CDVCommandStatus_ERROR
+    )
+    let cameraRoll = PhotoWithLocationService()
+
+    // runInBackground
+    self.commandDelegate!.run(inBackground: {
+        let result = cameraRoll.getImage(localIds:uuids, options:options)
+        // var resultStr: String
+        // do {
+        //     let jsonData = try JSONSerialization.data(withJSONObject: result)
+        //     resultStr = String(data: jsonData, encoding: .utf8)!
+        // } catch {
+        //     resultStr = "error:JSONSerialization()"
+        // }
+        pluginResult = CDVPluginResult(
+            status: CDVCommandStatus_OK,
+            messageAs: result
+        )
+        self.commandDelegate!.send(
+            pluginResult,
+            callbackId: command.callbackId
+        )
+    })
+  }
+
+
+
 }

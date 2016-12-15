@@ -382,5 +382,51 @@ class PhotoWithLocationService {
         
         return result
     }
+
+    func getImage(localIds: Array<String>, options:[String: Any]) -> [String: String] {
+        let fetchOpts = PHFetchOptions();
+        fetchOpts.includeHiddenAssets = false
+        fetchOpts.includeAssetSourceTypes = PHAssetSourceType.typeUserLibrary
+        let assets : PHFetchResult<PHAsset> = PHAsset.fetchAssets(withLocalIdentifiers: localIds, options: fetchOpts)
+        
+        let w : Int = (options["width"] as? Int? ?? 240)!
+        let h : Int = (options["height"] as? Int? ?? 320)!
+        let size = CGSize(width: w, height: h)
+
+        let imgReqOpts = PHImageRequestOptions()
+        imgReqOpts.isSynchronous = true
+        imgReqOpts.version = PHImageRequestOptionsVersion.current
+        imgReqOpts.deliveryMode = PHImageRequestOptionsDeliveryMode.fastFormat
+        imgReqOpts.resizeMode = PHImageRequestOptionsResizeMode.fast
+        imgReqOpts.isNetworkAccessAllowed = false
+        let jpgQuality : CGFloat = CGFloat( options["quality"] as! Float? ?? 0.7 )
+        
+        var result : [String: String] = [:]
+        for i in 0 ..< assets.count
+        {
+            let asset = assets[i], key = localIds[i]
+
+            // PHImageManager.requestImage() example
+            PHImageManager.default().requestImage(for: asset, targetSize: size
+            , contentMode: PHImageContentMode.default
+            , options: imgReqOpts
+            , resultHandler: { uiImage, _ in
+                guard let image = uiImage else {
+                    result[localIds[i]] = "error:PHImageManager.requestImage()"  // nil?
+                    return 
+                }
+                let jpgData:Data? = UIImageJPEGRepresentation(image, jpgQuality)
+                guard let data = jpgData else {
+                    result[localIds[i]] = "error:UIImageJPEGRepresentation()"
+                    return
+                }
+                let dataURI = data.base64EncodedString(options: .lineLength64Characters)
+                result[key] = dataURI
+                return
+            })
+        }
+        return result
+
+    }
     
 }
