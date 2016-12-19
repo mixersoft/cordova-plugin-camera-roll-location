@@ -91,9 +91,10 @@ var camera_roll_service_1 = exports;
         // constructor ( obj : [number, number])
         // constructor ( obj : any)
         function GeoJsonPoint(obj) {
+            var _this;
             if (obj instanceof Array) {
                 var longitude = obj[0], latitude = obj[1];
-                _super.call(this, "Point", [longitude, latitude]);
+                _this = _super.call(this, "Point", [longitude, latitude]) || this;
                 return;
             }
             else {
@@ -102,10 +103,11 @@ var camera_roll_service_1 = exports;
                 if (type != 'Point')
                     throw new Error("Error, expecting type=Point");
                 if (type && coordinates) {
-                    _super.call(this, type, coordinates);
+                    _this = _super.call(this, type, coordinates) || this;
                     return;
                 }
             }
+            return _this;
         }
         GeoJsonPoint.fromJson = function (_a) {
             var type = _a.type, coordinates = _a.coordinates;
@@ -151,8 +153,9 @@ var camera_roll_service_1 = exports;
     var RectangularGpsRegion = (function (_super) {
         __extends(RectangularGpsRegion, _super);
         function RectangularGpsRegion(sides) {
-            _super.call(this);
-            this.sides = sides;
+            var _this = _super.call(this) || this;
+            _this.sides = sides;
+            return _this;
         }
         RectangularGpsRegion.prototype.boundaries = function () {
             return this.sides;
@@ -167,9 +170,10 @@ var camera_roll_service_1 = exports;
     var CircularGpsRegion = (function (_super) {
         __extends(CircularGpsRegion, _super);
         function CircularGpsRegion(point, distance) {
-            _super.call(this);
-            this.point = point;
-            this.distance = distance;
+            var _this = _super.call(this) || this;
+            _this.point = point;
+            _this.distance = distance;
+            return _this;
         }
         CircularGpsRegion.prototype.boundaries = function () {
             var boundingBox = getGpsBoundingBoxFromCircle(this.point.coordinates, this.distance).sides;
@@ -244,16 +248,17 @@ var camera_roll_service_1 = exports;
      * iOS
      * see: https://developer.apple.com/reference/photos/phasset
      */
+    var mediaType;
     (function (mediaType) {
         mediaType[mediaType["Unknown"] = 0] = "Unknown";
         mediaType[mediaType["Image"] = 1] = "Image";
         mediaType[mediaType["Video"] = 2] = "Video";
         mediaType[mediaType["Audio"] = 3] = "Audio";
-    })(exports.mediaType || (exports.mediaType = {}));
-    var mediaType = exports.mediaType;
+    })(mediaType = exports.mediaType || (exports.mediaType = {}));
     /**
      * PHAssetMediaSubtype
      */
+    var mediaSubtype;
     (function (mediaSubtype) {
         // see: https://developer.apple.com/library/ios/documentation/Photos/Reference/Photos_Constants/index.html#//apple_ref/c/tdef/PHAssetMediaSubtype
         mediaSubtype[mediaSubtype["None"] = 0] = "None";
@@ -264,12 +269,43 @@ var camera_roll_service_1 = exports;
         mediaSubtype[mediaSubtype["VideoStreamed"] = 16] = "VideoStreamed";
         mediaSubtype[mediaSubtype["VideoHighFrameRate"] = 32] = "VideoHighFrameRate";
         mediaSubtype[mediaSubtype["VideoTimelapse"] = 64] = "VideoTimelapse";
-    })(exports.mediaSubtype || (exports.mediaSubtype = {}));
-    var mediaSubtype = exports.mediaSubtype;
+    })(mediaSubtype = exports.mediaSubtype || (exports.mediaSubtype = {}));
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    var PHImageRequestOptionsVersion;
+    (function (PHImageRequestOptionsVersion) {
+        PHImageRequestOptionsVersion[PHImageRequestOptionsVersion["Current"] = 0] = "Current";
+        PHImageRequestOptionsVersion[PHImageRequestOptionsVersion["Unadjusted"] = 1] = "Unadjusted";
+        PHImageRequestOptionsVersion[PHImageRequestOptionsVersion["Original"] = 2] = "Original";
+    })(PHImageRequestOptionsVersion = exports.PHImageRequestOptionsVersion || (exports.PHImageRequestOptionsVersion = {}));
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    var PHImageRequestOptionsResizeMode;
+    (function (PHImageRequestOptionsResizeMode) {
+        PHImageRequestOptionsResizeMode[PHImageRequestOptionsResizeMode["None"] = 0] = "None";
+        PHImageRequestOptionsResizeMode[PHImageRequestOptionsResizeMode["Fast"] = 1] = "Fast";
+        PHImageRequestOptionsResizeMode[PHImageRequestOptionsResizeMode["Exact"] = 2] = "Exact";
+    })(PHImageRequestOptionsResizeMode = exports.PHImageRequestOptionsResizeMode || (exports.PHImageRequestOptionsResizeMode = {}));
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    var PHImageRequestOptionsDeliveryMode;
+    (function (PHImageRequestOptionsDeliveryMode) {
+        PHImageRequestOptionsDeliveryMode[PHImageRequestOptionsDeliveryMode["Opportunistic"] = 0] = "Opportunistic";
+        PHImageRequestOptionsDeliveryMode[PHImageRequestOptionsDeliveryMode["HighQualityFormat"] = 1] = "HighQualityFormat";
+        PHImageRequestOptionsDeliveryMode[PHImageRequestOptionsDeliveryMode["fastFormat"] = 2] = "fastFormat";
+    })(PHImageRequestOptionsDeliveryMode = exports.PHImageRequestOptionsDeliveryMode || (exports.PHImageRequestOptionsDeliveryMode = {}));
 // });
 // define("camera-roll.service", ["require", "exports", "location-helper"], function (require, exports, location_helper_1) {
 //     "use strict";
-
     exec = require('cordova/exec');
     var PLUGIN_KEY = "cordova.plugins.CameraRollLocation";
     function _localTimeAsDate(localTime) {
@@ -309,7 +345,7 @@ var camera_roll_service_1 = exports;
             sorted.sort(function () {
                 var args = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i - 0] = arguments[_i];
+                    args[_i] = arguments[_i];
                 }
                 var _a = args.map(function (o) {
                     var value = o[sort.key];
@@ -366,7 +402,7 @@ var camera_roll_service_1 = exports;
                 var d = _deltas(l, i);
                 if (d[0] > MAX_DELTA.time && d[2] > MAX_DELTA.time) {
                     // singleton
-                    grouped[("" + i)] = d[1];
+                    grouped["" + i] = d[1];
                 }
                 else if (d[0] <= MAX_DELTA.time && d[2] > MAX_DELTA.time) {
                     // last of group
@@ -377,7 +413,7 @@ var camera_roll_service_1 = exports;
                 else if (d[0] > MAX_DELTA.time && d[2] <= MAX_DELTA.time) {
                     // first of group
                     photoGroup = [d[1]];
-                    grouped[("" + i)] = photoGroup;
+                    grouped["" + i] = photoGroup;
                 }
                 else {
                     // check distance between
@@ -388,7 +424,7 @@ var camera_roll_service_1 = exports;
                     else {
                         // console.info(`location moved, close group, i=${grouped['indexOf'](photoGroup)}, length=${photoGroup.length}`);
                         photoGroup = [d[1]];
-                        grouped[("" + i)] = photoGroup;
+                        grouped["" + i] = photoGroup;
                     }
                 }
             });
@@ -405,15 +441,16 @@ var camera_roll_service_1 = exports;
         CameraRollWithLoc.prototype.queryPhotos = function (options, force) {
             var _this = this;
             if (force === void 0) { force = false; }
-            if (!this._isProcessing && this._photos.length && !options && force == false) {
+            if (!this._isGettingCameraRoll && this._photos.length && !options && force == false) {
                 // resolve immediately with cached value
                 return Promise.resolve(this._photos);
             }
-            if (this._isProcessing && !options && force == false) {
+            if (this._isGettingCameraRoll && !options && force == false) {
                 // wait for promise to resolve
-                return this._isProcessing;
+                return this._isGettingCameraRoll;
             }
-            if (options === void 0) { options = {}; }
+            if (options == undefined)
+                options = {};
             var context;
             var plugin;
             if (typeof exec == "function")
@@ -437,7 +474,7 @@ var camera_roll_service_1 = exports;
                     if (options && !options.to && options['endDate'])
                         options.to = options['endDate'];
                     var methodName_1 = "getCameraRoll";
-                    this._isProcessing = new Promise(function (resolve, reject) {
+                    this._isGettingCameraRoll = new Promise(function (resolve, reject) {
                         // cordova.exec()
                         exec(resolve, reject, "cameraRollLocation", methodName_1, [args0_1]);
                     })
@@ -454,11 +491,11 @@ var camera_roll_service_1 = exports;
                     });
                     break;
                 case 'plugin':
-                    this._isProcessing = plugin.getCameraRoll(options);
+                    this._isGettingCameraRoll = plugin.getCameraRoll(options);
                     break;
                 default:
                     if (!cameraRollAsJsonString) {
-                        this._isProcessing = Promise.reject("ERROR: cordova plugin error, cordova not available??!?");
+                        this._isGettingCameraRoll = Promise.reject("ERROR: cordova plugin error, cordova not available??!?");
                     }
                     else {
                         if (!this._photos.length) {
@@ -471,11 +508,11 @@ var camera_roll_service_1 = exports;
                                 console.error("Error parsing JSON");
                             }
                         }
-                        this._isProcessing = Promise.resolve(this._photos);
+                        this._isGettingCameraRoll = Promise.resolve(this._photos);
                     }
                     break;
             }
-            return this._isProcessing.then(function (photos) {
+            return this._isGettingCameraRoll.then(function (photos) {
                 photos.forEach(function (o) {
                     if (o.localTime && typeof o.localTime == "string") {
                         o.localTime = _localTimeAsDate(o.localTime);
@@ -485,7 +522,7 @@ var camera_roll_service_1 = exports;
                         o.location = new location_helper_1.GeoJsonPoint(o.location);
                     }
                 });
-                _this._isProcessing = null;
+                _this._isGettingCameraRoll = null;
                 return _this._photos = photos;
             });
         };
@@ -587,12 +624,74 @@ var camera_roll_service_1 = exports;
             });
             return result;
         };
+        /**
+         * get ImageData as DataURI from CameraRoll using Plugin,
+         * @param  {optionsGetImage}      interface optionsGetImage
+         * @param  callback               interface NodeCallback
+         * @return {Promise<cameraRollPhoto[]>}         [description]
+         */
+        CameraRollWithLoc.prototype.getImage = function (uuids, options) {
+            if (uuids === void 0) { uuids = []; }
+            if (options === void 0) { options = {}; }
+            var context;
+            var plugin;
+            if (typeof exec == "function")
+                context = 'cordova';
+            else {
+                plugin = window && window.cordova && window.cordova.plugins && window.cordova.plugins.CameraRollLocation;
+                if (plugin)
+                    context = 'plugin';
+            }
+            switch (context) {
+                case 'cordova':
+                    var args0_2 = {};
+                    ["width", "height", "version", "resizeMode", "deliveryMode", "quality", "rawDataURI"].forEach(function (k) {
+                        if (options.hasOwnProperty(k) && options[k] != undefined)
+                            args0_2[k] = options[k];
+                    });
+                    var methodName_2 = "getImage";
+                    return new Promise(function (resolve, reject) {
+                        // cordova.exec()
+                        exec(resolve, reject, "cameraRollLocation", methodName_2, [uuids, args0_2]);
+                    })
+                        .then(function (result) {
+                        try {
+                            if (result == undefined)
+                                result = {};
+                            var someValid = Object.keys(result).some(function (k) {
+                                // at least one DataURI is valid
+                                return result[k].startsWith("error:") == false;
+                            });
+                            if (!args0_2["rawDataURI"]) {
+                                var base64prefix_1 = "data:image/jpeg;base64,";
+                                Object.keys(result).forEach(function (k) {
+                                    if (result[k].startsWith("error:") == false) {
+                                        result[k] = base64prefix_1 + result[k];
+                                    }
+                                });
+                            }
+                            if (someValid)
+                                return Promise.resolve(result);
+                            else
+                                return Promise.reject({ error: "invalid DataURIs", response: result });
+                        }
+                        catch (err) {
+                            return Promise.reject({ error: err, response: result });
+                        }
+                    });
+                case 'plugin':
+                    return plugin.getImage(uuids, options);
+                default:
+                    return Promise.reject("WARNING: getImage() not available from browser");
+            }
+        };
         return CameraRollWithLoc;
     }());
     exports.CameraRollWithLoc = CameraRollWithLoc;
 // });
 // define("cordova-plugin", ["require", "exports", "camera-roll.service"], function (require, exports, camera_roll_service_1) {
 //     "use strict";
+
     /**
      * instantiate CameraRollWithLoc() and use in Cordova plugin method: getByMoments()
      */
@@ -621,41 +720,28 @@ var camera_roll_service_1 = exports;
         return promise;
     }
     exports.getCameraRoll = getCameraRoll;
-
     /**
-     * get a scaled image for UI
+     * get Image as DataURI from CameraRollWithLoc
+     * NOTEs:
+     *  runs synchronously on a background thread
+     *  DataURIs are compatible with WKWebView, more performant scrolling
+     * @param uuids: string[] of PHAsset.localIdentifiers
+     * @return { uuid: dataURI: string}
      */
-    function getImage( uuids, options, resolve, reject ){
-        opt = {}
-        var keys = ['width', 'height', 'version', 'resizeMode', 'deliveryMode', 'rawDataURI'];
-        keys.forEach( function(k){
-            if (options[k]) {
-                if (k=='width' || k=='height') {
-                    opt[k] = Math.round(parseInt(options[k]));
-                } else
-                    opt[k] = options[k];
-            }
-        } )
-        // CGSize: let size = CGSize(width: 20, height: 30)
-        // resizeMode: PHImageRequestOptionsResizeMode{ none, fast, exact}
-        var resolve0 = function(result){
-            try {
-                if (result === void 0) { result = {}; }
-                var data = typeof result == "string" ? JSON.parse(result) : result;
-                if (!options.rawDataURI) {
-                    var base64prefix = "data:image/jpeg;base64,";
-                    Object.keys(data).forEach(function(key){  data[key] = base64prefix + data[key] });
-                }
-                resolve(data);
-            }
-            catch (err) {
-                return reject({ error: err, response: result });
-            }
+    function getImage(uuids, options, callback) {
+        var promise = plugin.getImage(uuids, options);
+        if (typeof callback == "function") {
+            promise.then(function (result) {
+                callback(null, result);
+                return result;
+            }, function (err) {
+                callback(err, undefined);
+                return Promise.reject(err);
+            });
         }
-        exec(resolve0, reject, "cameraRollLocation", "getImage", [uuids, opt]);
+        return promise;
     }
     exports.getImage = getImage;
-
     // deprecate
     function getByMoments(options, callback) {
         return getCameraRoll(options, callback);

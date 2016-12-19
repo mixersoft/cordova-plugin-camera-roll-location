@@ -231,6 +231,23 @@ declare module "camera-roll.types" {
         mediaType?: mediaType;
         mediaSubtype?: mediaSubtype;
     }
+    /**
+     * defaults:
+     *    width: 320
+     *    height: 240
+     *    version: PHImageRequestOptionsVersion.Current
+     *    resizeMode: PHImageRequestOptionsResizeMode.Fast
+     *    deliveryMode: PHImageRequestOptionsDeliveryMode.fastFormat
+     *    rawDataURI: false, add prefix `data:image/jpeg;base64,` to DataURI
+     */
+    export interface optionsGetImage {
+        width?: number;
+        height?: number;
+        version?: PHImageRequestOptionsVersion;
+        resizeMode?: PHImageRequestOptionsResizeMode;
+        deliveryMode?: PHImageRequestOptionsDeliveryMode;
+        rawDataURI?: boolean;
+    }
     export type optionsGetByMoments = optionsGetCameraRoll;
     export interface NodeCallback {
         (err: any, data: any): void;
@@ -252,6 +269,7 @@ declare module "camera-roll.types" {
         equals(other: Size): boolean;
         toString(): string;
     }
+    export type DataURI = string;
     /**
      * PHAssetMediaType
      * iOS
@@ -276,14 +294,44 @@ declare module "camera-roll.types" {
         VideoHighFrameRate = 32,
         VideoTimelapse = 64,
     }
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    export enum PHImageRequestOptionsVersion {
+        Current = 0,
+        Unadjusted = 1,
+        Original = 2,
+    }
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    export enum PHImageRequestOptionsResizeMode {
+        None = 0,
+        Fast = 1,
+        Exact = 2,
+    }
+    /**
+     * PHImageRequestOptions
+     * iOS
+     * see: https://developer.apple.com/reference/photos/phimagerequestoptions
+     */
+    export enum PHImageRequestOptionsDeliveryMode {
+        Opportunistic = 0,
+        HighQualityFormat = 1,
+        fastFormat = 2,
+    }
 }
 declare module "camera-roll.service" {
-    import { optionsQuery, optionsFilter, optionsSort, cameraRollPhoto } from "camera-roll.types";
+    import { optionsQuery, optionsFilter, optionsSort, cameraRollPhoto, optionsGetImage, DataURI } from "camera-roll.types";
     export class CameraRollWithLoc {
         protected _photos: cameraRollPhoto[];
         protected _filter: optionsFilter;
         protected _filteredPhotos: cameraRollPhoto[];
-        private _isProcessing;
+        private _isGettingCameraRoll;
         static sortPhotos(photos: cameraRollPhoto[], options?: optionsSort[], replace?: boolean): cameraRollPhoto[];
         static groupPhotos(photos: cameraRollPhoto[], options?: any): any;
         constructor();
@@ -317,10 +365,19 @@ declare module "camera-roll.service" {
          */
         groupPhotos(options?: any): any;
         getPhotos(limit?: number): cameraRollPhoto[];
+        /**
+         * get ImageData as DataURI from CameraRoll using Plugin,
+         * @param  {optionsGetImage}      interface optionsGetImage
+         * @param  callback               interface NodeCallback
+         * @return {Promise<cameraRollPhoto[]>}         [description]
+         */
+        getImage(uuids: string[], options: optionsGetImage): Promise<{
+            [key: string]: DataURI;
+        }>;
     }
 }
 declare module "cordova-plugin" {
-    import { cameraRollPhoto, NodeCallback, optionsGetCameraRoll } from "camera-roll.types";
+    import { cameraRollPhoto, NodeCallback, optionsGetCameraRoll, optionsGetImage, DataURI } from "camera-roll.types";
     /**
      * This is the ACTUAL cordova plugin method call
      * plugin method wrapper for CameraRollWithLoc class
@@ -331,7 +388,17 @@ declare module "cordova-plugin" {
      * @param  callback()              OPTIONAL nodejs style callback, i.e. (err, resp)=>{}
      * @return Promise() or void       returns a Promise if callback is NOT provided
      */
-    export function getCameraRoll(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
+    export function getCameraRoll(options: optionsGetCameraRoll, callback?: NodeCallback): Promise<cameraRollPhoto[]>;
+    /**
+     * get Image as DataURI from CameraRollWithLoc
+     * NOTEs:
+     *  runs synchronously on a background thread
+     *  DataURIs are compatible with WKWebView, more performant scrolling
+     * @param uuids: string[] of PHAsset.localIdentifiers
+     * @return { uuid: dataURI}
+     */
+    export function getImage(uuids: string[], options: optionsGetImage, callback?: NodeCallback): Promise<{
+        [key: string]: DataURI;
+    }>;
     export function getByMoments(options: optionsGetCameraRoll, callback: NodeCallback): Promise<cameraRollPhoto[]>;
 }
-

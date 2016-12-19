@@ -395,9 +395,15 @@ class PhotoWithLocationService {
 
         let imgReqOpts = PHImageRequestOptions()
         imgReqOpts.isSynchronous = true
-        imgReqOpts.version = PHImageRequestOptionsVersion.current
-        imgReqOpts.deliveryMode = PHImageRequestOptionsDeliveryMode.fastFormat
-        imgReqOpts.resizeMode = PHImageRequestOptionsResizeMode.fast
+        imgReqOpts.version = (options["version"] != nil)
+            ? PHImageRequestOptionsVersion(rawValue: options["version"] as! Int)!
+            :  PHImageRequestOptionsVersion.current
+        imgReqOpts.deliveryMode = (options["deliveryMode"] != nil)
+            ? PHImageRequestOptionsDeliveryMode(rawValue: options["deliveryMode"] as! Int)!
+            :  PHImageRequestOptionsDeliveryMode.fastFormat
+        imgReqOpts.resizeMode = (options["resizeMode"] != nil)
+            ? PHImageRequestOptionsResizeMode(rawValue: options["resizeMode"] as! Int)!
+            :  PHImageRequestOptionsResizeMode.fast
         imgReqOpts.isNetworkAccessAllowed = false
         let jpgQuality : CGFloat = CGFloat( options["quality"] as! Float? ?? 0.7 )
         

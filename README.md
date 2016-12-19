@@ -60,6 +60,7 @@ interface location {
 }
 
 // same as google.maps.LatLngLiteral | {speed}
+// prefer {position: LatLngSpeedLiteral} over {location:GeoJsonPoint}
 interface LatLngSpeedLiteral {
   lat: number,
   lng: number,
@@ -73,31 +74,64 @@ interface optionsGetCameraRoll {
   mediaSubtype?: mediaSubtype
 }
 
-// deprecate
+interface optionsGetImage {
+    width?: number;
+    height?: number;
+    version?: PHImageRequestOptionsVersion;
+    resizeMode?: PHImageRequestOptionsResizeMode;
+    deliveryMode?: PHImageRequestOptionsDeliveryMode;
+    rawDataURI?: boolean;
+}
+
+// deprecate: renamed to getCameraRoll
 type optionsGetByMoments = optionsGetCameraRoll;
 
-/**
-* get photos from CameraRoll together with location and moment data
-* calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec()
-* swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [AnyObject]
-*
-* plugin = window.cordova.plugins.CameraRollLocation
-*
-* @param  {optionsGetCameraRoll}   options {from:, to:, mediaType:, mediaSubtypes: }
-* @param  function NodeCallback    nodejs style callback, i.e. (err, resp)=>{}
-* @return [cameraRollPhoto,]       array of cameraRollPhoto
-*/
-class CameraRollPhoto {
-    getCameraRoll(
-      options: optionsGetCameraRoll
-      , callback: (err:any, resp:any)=>void
-    ) : void
 
-    // deprecate
-    getByMoments(
-      options: optionsGetByMoments
-      , callback: (err:any, resp:any)=>void
-    ) : void
+class CameraRollPhoto {
+
+  /**
+   * get photos from CameraRoll together with location and moment data
+   * calls (ios/swift) CameraRollLocation.getByMoments() using plugin exec()
+   * swift: func getByMoments(from from: NSDate? = nil, to: NSDate? = nil) -> [AnyObject]
+   *
+   * plugin = window.cordova.plugins.CameraRollLocation
+   *
+   * @param  {optionsGetCameraRoll}   options {from:, to:, mediaType:, mediaSubtypes: }
+   * @param  function NodeCallback    nodejs style callback, i.e. (err, resp)=>{}
+   * @return [cameraRollPhoto,]       array of cameraRollPhoto
+   */  
+  getCameraRoll(
+    options: optionsGetCameraRoll
+    , callback?: (err:any, resp:any)=>void
+  ) : void
+
+  /**
+   * get Image as DataURI from CameraRollWithLoc
+   * NOTEs:
+   *  runs synchronously on a background thread
+   *  DataURIs are compatible with WKWebView, more performant scrolling
+   * @param uuids: string[] of PHAsset.localIdentifiers
+   * @param options:
+   *  defaults:
+   *    width: 320
+   *    height: 240
+   *    version: PHImageRequestOptionsVersion.Current
+   *    resizeMode: PHImageRequestOptionsResizeMode.Fast
+   *    deliveryMode: PHImageRequestOptionsDeliveryMode.fastFormat
+   *    rawDataURI: false, add prefix `data:image/jpeg;base64,` to DataURI
+   * @return { uuid: DataURI }
+   */
+  getImage(
+    uuids: string[]
+    , options: optionsGetImage
+    , callback?:  (err:any, resp:any)=>void
+  ): Promise<{[key: string]: DataURI;}>
+
+  // deprecate
+  getByMoments(
+    options: optionsGetByMoments
+    , callback: (err:any, resp:any)=>void
+  ) : void
 }
 
 
@@ -118,6 +152,23 @@ platform.ready().then(() => {
     }
   );
 
+  // or getCameraRoll() with Promises
+  plugin.getCameraRoll({
+      from: new Date('2016-09-01'),
+      to: new Date('2016-09-30')
+  })
+  .then( result=>{
+    console.info(`plugin getCameraRoll() result[0...5]=${ result.slice(0,5) }`);
+  })
+
+  // getImage() with Promises
+  plugin.getImage(["XXXXXXXX-XXXX-XXXX-XXXX-F25F0864AE01/L0/001"],{
+    width: 640,
+    height: 480
+  })
+  .then( result=>{
+    IMG.src = result["XXXXXXXX-XXXX-XXXX-XXXX-F25F0864AE01/L0/001"]
+  })
 });
 
 
