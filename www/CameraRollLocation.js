@@ -404,7 +404,6 @@ var camera_roll_service_1 = exports;
          */
         CameraRollWithLoc.prototype.queryPhotos = function (options, force) {
             var _this = this;
-            if (options === void 0) { options = {}; }
             if (force === void 0) { force = false; }
             if (!this._isProcessing && this._photos.length && !options && force == false) {
                 // resolve immediately with cached value
@@ -414,6 +413,7 @@ var camera_roll_service_1 = exports;
                 // wait for promise to resolve
                 return this._isProcessing;
             }
+            if (options === void 0) { options = {}; }
             var context;
             var plugin;
             if (typeof exec == "function")

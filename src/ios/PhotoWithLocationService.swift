@@ -389,8 +389,8 @@ class PhotoWithLocationService {
         fetchOpts.includeAssetSourceTypes = PHAssetSourceType.typeUserLibrary
         let assets : PHFetchResult<PHAsset> = PHAsset.fetchAssets(withLocalIdentifiers: localIds, options: fetchOpts)
         
-        let w : Int = (options["width"] as? Int? ?? 240)!
-        let h : Int = (options["height"] as? Int? ?? 320)!
+        let w : Int = (options["width"] as? Int? ?? 320)!
+        let h : Int = (options["height"] as? Int? ?? 240)!
         let size = CGSize(width: w, height: h)
 
         let imgReqOpts = PHImageRequestOptions()
